@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Staff Dashboard</title>
+
+<link rel="stylesheet" href="sidebar.css" />
+
+<style>
+  body {
+    display: flex;
+    background: #f1f5f9;
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+  }
+
+  .main {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .page-header {
+    margin-bottom: 22px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .page-header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 6px 0 0;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .stat {
+    background: white;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 78px;
+  }
+
+  .stat-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+  }
+
+  .icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .icon.due {
+    background: #fff7ed;
+    color: #c2410c;
+  }
+
+  .icon.overdue {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .icon.completed {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .icon.children {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 3px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 22px;
+    padding: 14px 18px 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .tab {
+    border: none;
+    background: transparent;
+    padding: 12px 0;
+    font-size: 13px;
+    color: #64748b;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .tab.active {
+    color: #b45309;
+    font-weight: 600;
+  }
+
+  .tab.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: #f59e0b;
+    border-radius: 999px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    gap: 14px;
+  }
+
+  .search {
+    flex: 1;
+    max-width: 380px;
+  }
+
+  .search input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 13px;
+    outline: none;
+    background: #f8fafc;
+  }
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #334155;
+    font-size: 13px;
+  }
+
+  .filter-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    background: #f8fafc;
+    padding: 12px 18px;
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 14px 18px;
+    border-top: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .name {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .badge {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    display: inline-block;
+  }
+
+  .badge.due {
+    background: #fef3c7;
+    color: #b45309;
+  }
+
+  .badge.overdue {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .badge.upcoming {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .icon-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @media (max-width: 1100px) {
+    .stats {
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: auto;
+      height: auto;
+    }
+
+    .main {
+      padding: 18px;
+    }
+
+    .toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .search {
+      max-width: none;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-header">
+        <img src="logo.png" class="sidebar-logo" />
+        <div class="sidebar-text">
+          <div class="sidebar-title">VaxAlert</div>
+          <div class="sidebar-sub">Reganion Children's Clinic</div>
+        </div>
+      </div>
+
+      <div class="menu">
+        <a href="staffdb.html" class="active">Dashboard</a>
+        <a href="childrecords.html">Child Records</a>
+        <a href="recordvaccine.html">Record Vaccine</a>
+        <a href="reminderlogs.html">Reminder Logs</a>
+        <a href="reports.html">Reports</a>
+        <a href="staffprofile.html">Profile</a>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="profile-name" id="sidebarName"></div>
+      <div style="font-size: 12px; color: #64748b">staff</div>
+      <div class="signout" onclick="logout()">Sign Out</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <h1>Staff Dashboard</h1>
+      <p>Overview of vaccination status and upcoming appointments</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-left">
+          <div class="icon due" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 7v5l3 2"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-label">Due Soon</div>
+            <div class="stat-value" id="statDue">2</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-left">
+          <div class="icon overdue" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <path d="M12 9v4"></path>
+              <path d="M12 17h.01"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-label">Overdue</div>
+            <div class="stat-value" id="statOverdue">3</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-left">
+          <div class="icon completed" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z"></path>
+              <path d="M9 12l2 2 4-4"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-label">Completed (Wk)</div>
+            <div class="stat-value" id="statCompleted">5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-left">
+          <div class="icon children" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M4 21v-2a4 4 0 0 1 3-3.87"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-label">Total Children</div>
+            <div class="stat-value" id="statChildren">3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabs" role="tablist" aria-label="Vaccination statuses">
+        <button class="tab active" role="tab" aria-selected="true" data-tab="due">Due Soon</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="overdue">Overdue</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="upcoming">Upcoming</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="search">
+          <input id="searchInput" type="text" placeholder="Search child or vaccine..." />
+        </div>
+        <button class="filter-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
+          </svg>
+          Filter
+        </button>
+      </div>
+
+      <div style="overflow-x: auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Child Name</th>
+              <th>Vaccine</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th style="text-align: right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
+    document.getElementById("sidebarName").textContent = name;
+
+    function logout() {
+      localStorage.removeItem("staffName");
+      window.location.href = "login.html";
+    }
+
+    const allRows = [
+      {
+        child: "Sofia Reyes",
+        vaccine: "Hepatitis A (Dose 2)",
+        dueDate: "2023-11-15",
+        status: "due",
+      },
+      {
+        child: "Marco Reyes",
+        vaccine: "PCV (Dose 2)",
+        dueDate: "2024-02-10",
+        status: "due",
+      },
+      {
+        child: "Liam Santos",
+        vaccine: "Varicella (Dose 1)",
+        dueDate: "2023-08-15",
+        status: "overdue",
+      },
+      {
+        child: "Ava Cruz",
+        vaccine: "Pentavalent (Dose 2)",
+        dueDate: "2023-09-22",
+        status: "overdue",
+      },
+      {
+        child: "Ethan Dela Rosa",
+        vaccine: "MMR (Dose 1)",
+        dueDate: "2024-03-02",
+        status: "upcoming",
+      },
+    ];
+
+    let activeTab = "due";
+
+    function badge(status) {
+      if (status === "due") return '<span class="badge due">Due Soon</span>';
+      if (status === "overdue") return '<span class="badge overdue">Overdue</span>';
+      return '<span class="badge upcoming">Upcoming</span>';
+    }
+
+    function render() {
+      const q = (document.getElementById("searchInput").value || "").toLowerCase();
+      const filtered = allRows.filter((r) => {
+        const matchesTab = r.status === activeTab;
+        const matchesQuery = (r.child + " " + r.vaccine).toLowerCase().includes(q);
+        return matchesTab && matchesQuery;
+      });
+
+      document.getElementById("rows").innerHTML = filtered
+        .map(
+          (r) => `
+            <tr>
+              <td class="name">${r.child}</td>
+              <td>${r.vaccine}</td>
+              <td>${r.dueDate}</td>
+              <td>${badge(r.status)}</td>
+              <td style="text-align: right">
+                <div class="actions" style="justify-content:flex-end;">
+                  <button class="icon-btn" title="View" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button class="icon-btn" title="Edit" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `
+        )
+        .join("");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", render);
+
+    document.querySelectorAll(".tab").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((b) => {
+          b.classList.remove("active");
+          b.setAttribute("aria-selected", "false");
+        });
+        btn.classList.add("active");
+        btn.setAttribute("aria-selected", "true");
+        activeTab = btn.getAttribute("data-tab");
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

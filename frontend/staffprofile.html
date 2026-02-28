@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Profile Settings</title>
+
+<link rel="stylesheet" href="sidebar.css" />
+
+<style>
+  body {
+    display: flex;
+    background: #f1f5f9;
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+  }
+
+  .main {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .page-header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 6px 0 0;
+  }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 980px;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .card-inner {
+    padding: 18px;
+  }
+
+  .profile-top {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 18px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: #0f2448;
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .profile-name {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 14px;
+  }
+
+  .profile-sub {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .input {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 13px;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .input svg {
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+
+  .sec-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 14px;
+  }
+
+  .sec-header svg {
+    width: 18px;
+    height: 18px;
+    color: #64748b;
+  }
+
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    font-size: 13px;
+    outline: none;
+  }
+
+  input[type="password"]:focus {
+    border-color: #142e5c;
+    box-shadow: 0 0 0 3px rgba(20, 46, 92, 0.12);
+  }
+
+  .help {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px 18px;
+  }
+
+  .link-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  .save-btn {
+    border: none;
+    background: #142e5c;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 12px 22px rgba(20, 46, 92, 0.18);
+  }
+
+  .save-btn:hover {
+    background: #0f2448;
+  }
+
+  .save-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: auto;
+      height: auto;
+    }
+
+    .main {
+      padding: 18px;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-header">
+        <img src="logo.png" class="sidebar-logo" />
+        <div class="sidebar-text">
+          <div class="sidebar-title">VaxAlert</div>
+          <div class="sidebar-sub">Reganion Children's Clinic</div>
+        </div>
+      </div>
+
+      <div class="menu">
+        <a href="staffdb.html">Dashboard</a>
+        <a href="childrecords.html">Child Records</a>
+        <a href="recordvaccine.html">Record Vaccine</a>
+        <a href="reminderlogs.html">Reminder Logs</a>
+        <a href="reports.html">Reports</a>
+        <a href="staffprofile.html" class="active">Profile</a>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="profile-name" id="sidebarName"></div>
+      <div style="font-size: 12px; color: #64748b">staff</div>
+      <div class="signout" onclick="logout()">Sign Out</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <h1>Profile Settings</h1>
+      <p>Manage your account information and security</p>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <div class="profile-top">
+          <div class="avatar" id="avatar">SM</div>
+          <div>
+            <div class="profile-name" id="profileName">Sarah Mendoza</div>
+            <div class="profile-sub">staff Account</div>
+          </div>
+        </div>
+
+        <div class="card-inner">
+          <div class="grid-2">
+            <div class="field">
+              <label>Email Address</label>
+              <div class="input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 4h16v16H4z"></path>
+                  <path d="M22 6l-10 7L2 6"></path>
+                </svg>
+                <span id="emailText">staff@reganion.com</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Contact Number</label>
+              <div class="input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.81.31 1.6.57 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.72-1.09a2 2 0 0 1 2.11-.45c.76.26 1.55.45 2.36.57A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span id="phoneText">+63 918 987 6543</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          Security
+        </div>
+
+        <form id="securityForm">
+          <div class="card-inner">
+            <div class="field">
+              <label for="currentPw">Current Password</label>
+              <input id="currentPw" type="password" placeholder="••••••••" />
+              <div class="help">Required to make changes</div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 16px;">
+              <div class="field">
+                <label for="newPw">New Password</label>
+                <input id="newPw" type="password" placeholder="New password" />
+              </div>
+              <div class="field">
+                <label for="confirmPw">Confirm New Password</label>
+                <input id="confirmPw" type="password" placeholder="Confirm new password" />
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <button class="link-btn" type="button" id="cancelBtn">Cancel</button>
+            <button class="save-btn" type="submit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <path d="M17 21v-8H7v8"></path>
+                <path d="M7 3v5h8"></path>
+              </svg>
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
+    document.getElementById("sidebarName").textContent = name;
+    document.getElementById("profileName").textContent = name;
+
+    const initials = name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0].toUpperCase())
+      .join("");
+    document.getElementById("avatar").textContent = initials || "S";
+
+    function logout() {
+      localStorage.removeItem("staffName");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("securityForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      alert("Saved changes (UI only)");
+    });
+
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+      document.getElementById("securityForm").reset();
+    });
+  </script>
+</body>
+</html>

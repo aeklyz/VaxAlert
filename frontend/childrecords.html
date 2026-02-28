@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Child Records</title>
+
+<link rel="stylesheet" href="sidebar.css" />
+
+<style>
+  body {
+    display: flex;
+    background: #f1f5f9;
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+  }
+
+  .main {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 6px 0 0;
+  }
+
+  .primary-btn {
+    border: none;
+    background: #142e5c;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 12px 22px rgba(20, 46, 92, 0.18);
+    white-space: nowrap;
+  }
+
+  .primary-btn:hover {
+    background: #0f2448;
+  }
+
+  .primary-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .toolbar {
+    padding: 14px 18px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .search {
+    max-width: 340px;
+  }
+
+  .search input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    outline: none;
+    background: #f8fafc;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    background: #f8fafc;
+    padding: 12px 18px;
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 14px 18px;
+    border-top: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .name {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    display: inline-block;
+    line-height: 1.2;
+  }
+
+  .badge.overdue {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .badge.upcoming {
+    background: #e0f2fe;
+    color: #0369a1;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .icon-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .icon-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: auto;
+      height: auto;
+    }
+
+    .main {
+      padding: 18px;
+    }
+
+    .header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .primary-btn {
+      width: fit-content;
+    }
+
+    .search {
+      max-width: none;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-header">
+        <img src="logo.png" class="sidebar-logo" />
+        <div class="sidebar-text">
+          <div class="sidebar-title">VaxAlert</div>
+          <div class="sidebar-sub">Reganion Children's Clinic</div>
+        </div>
+      </div>
+
+      <div class="menu">
+        <a href="staffdb.html">Dashboard</a>
+        <a href="childrecords.html" class="active">Child Records</a>
+        <a href="recordvaccine.html">Record Vaccine</a>
+        <a href="reminderlogs.html">Reminder Logs</a>
+        <a href="reports.html">Reports</a>
+        <a href="staffprofile.html">Profile</a>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="profile-name" id="sidebarName"></div>
+      <div style="font-size: 12px; color: #64748b">staff</div>
+      <div class="signout" onclick="logout()">Sign Out</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>Child Records</h1>
+        <p>Manage patient profiles and history</p>
+      </div>
+
+      <button class="primary-btn" type="button" id="addChildBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14"></path>
+          <path d="M5 12h14"></path>
+        </svg>
+        Add Child Profile
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <div class="search">
+          <input id="searchInput" type="text" placeholder="Search child or parent..." />
+        </div>
+      </div>
+
+      <div style="overflow-x: auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Child Name</th>
+              <th>DOB</th>
+              <th>Parent/Guardian</th>
+              <th>Status Summary</th>
+              <th style="text-align: right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
+    document.getElementById("sidebarName").textContent = name;
+
+    function logout() {
+      localStorage.removeItem("staffName");
+      window.location.href = "login.html";
+    }
+
+    const children = [
+      {
+        child: "Sofia Reyes",
+        dob: "2022-05-15",
+        parent: "Maria Reyes",
+        overdue: 1,
+        upcoming: 0,
+      },
+      {
+        child: "Marco Reyes",
+        dob: "2023-11-10",
+        parent: "Maria Reyes",
+        overdue: 2,
+        upcoming: 1,
+      },
+      {
+        child: "Lucas Santos",
+        dob: "2023-01-20",
+        parent: "Juan Santos",
+        overdue: 0,
+        upcoming: 1,
+      },
+    ];
+
+    function summaryBadges(row) {
+      const badges = [];
+      if (row.overdue > 0) badges.push(`<span class="badge overdue">${row.overdue} Overdue</span>`);
+      if (row.upcoming > 0) badges.push(`<span class="badge upcoming">${row.upcoming} Upcoming</span>`);
+      return badges.join(" ");
+    }
+
+    function render() {
+      const q = (document.getElementById("searchInput").value || "").toLowerCase();
+      const filtered = children.filter((r) => (r.child + " " + r.parent).toLowerCase().includes(q));
+
+      document.getElementById("rows").innerHTML = filtered
+        .map(
+          (r) => `
+            <tr>
+              <td class="name">${r.child}</td>
+              <td>${r.dob}</td>
+              <td>${r.parent}</td>
+              <td><span class="status">${summaryBadges(r)}</span></td>
+              <td style="text-align: right">
+                <div class="actions">
+                  <button class="icon-btn" type="button" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button class="icon-btn" type="button" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `
+        )
+        .join("");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", render);
+
+    document.getElementById("addChildBtn").addEventListener("click", () => {
+      alert("Add Child Profile clicked (UI only)");
+    });
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clinic Reports</title>
+
+<link rel="stylesheet" href="sidebar.css" />
+
+<style>
+  body {
+    display: flex;
+    background: #f1f5f9;
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+  }
+
+  .main {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 6px 0 0;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #334155;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .btn.primary {
+    border: none;
+    background: #142e5c;
+    color: #ffffff;
+    box-shadow: 0 12px 22px rgba(20, 46, 92, 0.18);
+  }
+
+  .btn.primary:hover {
+    background: #0f2448;
+  }
+
+  .filters {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .filters label {
+    font-size: 12px;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .filters select {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 9px 10px;
+    font-size: 13px;
+    background: #f8fafc;
+    outline: none;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .card h3 {
+    margin: 0;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #0f172a;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-top: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .name {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .due-date {
+    color: #b45309;
+    font-weight: 600;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1.2;
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  @media (max-width: 980px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: auto;
+      height: auto;
+    }
+
+    .main {
+      padding: 18px;
+    }
+
+    .header {
+      flex-direction: column;
+    }
+
+    .actions {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-header">
+        <img src="logo.png" class="sidebar-logo" />
+        <div class="sidebar-text">
+          <div class="sidebar-title">VaxAlert</div>
+          <div class="sidebar-sub">Reganion Children's Clinic</div>
+        </div>
+      </div>
+
+      <div class="menu">
+        <a href="staffdb.html">Dashboard</a>
+        <a href="childrecords.html">Child Records</a>
+        <a href="recordvaccine.html">Record Vaccine</a>
+        <a href="reminderlogs.html">Reminder Logs</a>
+        <a href="reports.html" class="active">Reports</a>
+        <a href="staffprofile.html">Profile</a>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="profile-name" id="sidebarName"></div>
+      <div style="font-size: 12px; color: #64748b">staff</div>
+      <div class="signout" onclick="logout()">Sign Out</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>Clinic Reports</h1>
+        <p>Generate vaccination compliance reports</p>
+      </div>
+
+      <div class="actions">
+        <button class="btn" type="button" id="printBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9V2h12v7"></path>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <path d="M6 14h12v8H6z"></path>
+          </svg>
+          Print
+        </button>
+        <button class="btn primary" type="button" id="exportBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <path d="M7 10l5 5 5-5"></path>
+            <path d="M12 15V3"></path>
+          </svg>
+          Export CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <label for="period">Period:</label>
+      <select id="period">
+        <option selected>This Month</option>
+        <option>Last Month</option>
+        <option>This Quarter</option>
+        <option>This Year</option>
+      </select>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Due Soon Report</h3>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Child</th>
+                <th>Vaccine</th>
+                <th>Due Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name">Sofia Reyes</td>
+                <td>Hepatitis A</td>
+                <td class="due-date">2023-11-15</td>
+              </tr>
+              <tr>
+                <td class="name">Marco Reyes</td>
+                <td>PCV</td>
+                <td class="due-date">2024-02-10</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Overdue Report</h3>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Child</th>
+                <th>Vaccine</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="name">Sofia Reyes</td>
+                <td>Varicella</td>
+                <td><span class="pill">Overdue</span></td>
+              </tr>
+              <tr>
+                <td class="name">Marco Reyes</td>
+                <td>Pentavalent</td>
+                <td><span class="pill">Overdue</span></td>
+              </tr>
+              <tr>
+                <td class="name">Marco Reyes</td>
+                <td>OPV</td>
+                <td><span class="pill">Overdue</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
+    document.getElementById("sidebarName").textContent = name;
+
+    function logout() {
+      localStorage.removeItem("staffName");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    document.getElementById("exportBtn").addEventListener("click", () => alert("Export CSV (UI only)"));
+  </script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reminder Logs</title>
+
+<link rel="stylesheet" href="sidebar.css" />
+
+<style>
+  body {
+    display: flex;
+    background: #f1f5f9;
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+  }
+
+  .main {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 6px 0 0;
+  }
+
+  .card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .search {
+    flex: 1;
+    max-width: 340px;
+  }
+
+  .search input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    outline: none;
+    background: #f8fafc;
+  }
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 9px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .filter-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    background: #f8fafc;
+    padding: 12px 18px;
+    text-align: left;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  td {
+    padding: 14px 18px;
+    border-top: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .child {
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .pill.email {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .pill.sms {
+    background: #f3e8ff;
+    color: #7e22ce;
+  }
+
+  .pill.sent {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  .pill.failed {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .pill.pending {
+    background: #e2e8f0;
+    color: #475569;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .icon-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #64748b;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .icon-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: auto;
+      height: auto;
+    }
+
+    .main {
+      padding: 18px;
+    }
+
+    .toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .search {
+      max-width: none;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-header">
+        <img src="logo.png" class="sidebar-logo" />
+        <div class="sidebar-text">
+          <div class="sidebar-title">VaxAlert</div>
+          <div class="sidebar-sub">Reganion Children's Clinic</div>
+        </div>
+      </div>
+
+      <div class="menu">
+        <a href="staffdb.html">Dashboard</a>
+        <a href="childrecords.html">Child Records</a>
+        <a href="recordvaccine.html">Record Vaccine</a>
+        <a href="reminderlogs.html" class="active">Reminder Logs</a>
+        <a href="reports.html">Reports</a>
+        <a href="staffprofile.html">Profile</a>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="profile-name" id="sidebarName"></div>
+      <div style="font-size: 12px; color: #64748b">staff</div>
+      <div class="signout" onclick="logout()">Sign Out</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>Reminder Logs</h1>
+        <p>Track automated SMS and Email notifications</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <div class="search">
+          <input id="searchInput" type="text" placeholder="Search logs..." />
+        </div>
+        <button class="filter-btn" type="button" id="filterBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 3H2l8 9v7l4 2v-9l8-9z"></path>
+          </svg>
+          Filter Status
+        </button>
+      </div>
+
+      <div style="overflow-x: auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Date/Time</th>
+              <th>Child</th>
+              <th>Contact</th>
+              <th>Channel</th>
+              <th>Status</th>
+              <th style="text-align: right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
+    document.getElementById("sidebarName").textContent = name;
+
+    function logout() {
+      localStorage.removeItem("staffName");
+      window.location.href = "login.html";
+    }
+
+    const logs = [
+      {
+        dt: "2024-02-01 09:00 AM",
+        child: "Marco Reyes",
+        contact: "maria.reyes@example.com",
+        channel: "email",
+        status: "sent",
+      },
+      {
+        dt: "2024-02-01 09:05 AM",
+        child: "Marco Reyes",
+        contact: "+63 917 123 4567",
+        channel: "sms",
+        status: "failed",
+      },
+      {
+        dt: "2024-02-05 10:00 AM",
+        child: "Sofia Reyes",
+        contact: "maria.reyes@example.com",
+        channel: "email",
+        status: "pending",
+      },
+      {
+        dt: "2024-01-15 08:30 AM",
+        child: "Lucas Santos",
+        contact: "juan.santos@example.com",
+        channel: "email",
+        status: "sent",
+      },
+    ];
+
+    let activeStatus = "all";
+
+    function channelPill(ch) {
+      return ch === "sms" ? '<span class="pill sms">SMS</span>' : '<span class="pill email">Email</span>';
+    }
+
+    function statusPill(st) {
+      if (st === "sent") return '<span class="pill sent">Sent</span>';
+      if (st === "failed") return '<span class="pill failed">Failed</span>';
+      return '<span class="pill pending">Pending</span>';
+    }
+
+    function render() {
+      const q = (document.getElementById("searchInput").value || "").toLowerCase();
+      const filtered = logs.filter((r) => {
+        const matchesText = (r.dt + " " + r.child + " " + r.contact + " " + r.channel + " " + r.status).toLowerCase().includes(q);
+        const matchesStatus = activeStatus === "all" ? true : r.status === activeStatus;
+        return matchesText && matchesStatus;
+      });
+
+      document.getElementById("rows").innerHTML = filtered
+        .map(
+          (r) => `
+            <tr>
+              <td>${r.dt}</td>
+              <td class="child">${r.child}</td>
+              <td>${r.contact}</td>
+              <td>${channelPill(r.channel)}</td>
+              <td>${statusPill(r.status)}</td>
+              <td style="text-align:right;">
+                <div class="actions">
+                  <button class="icon-btn" type="button" title="View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `
+        )
+        .join("");
+    }
+
+    document.getElementById("searchInput").addEventListener("input", render);
+
+    document.getElementById("filterBtn").addEventListener("click", () => {
+      const next = activeStatus === "all" ? "sent" : activeStatus === "sent" ? "failed" : activeStatus === "failed" ? "pending" : "all";
+      activeStatus = next;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

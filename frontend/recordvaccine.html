@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Record Vaccination</title>
+
+<link rel="stylesheet" href="sidebar.css" />
+
+<style>
+  body {
+    display: flex;
+    background: #f1f5f9;
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+  }
+
+  .main {
+    flex: 1;
+    padding: 40px;
+  }
+
+  .page-header {
+    margin-bottom: 18px;
+  }
+
+  .page-header h1 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .page-header p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 6px 0 0;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    max-width: 920px;
+  }
+
+  .card-inner {
+    padding: 22px;
+  }
+
+  .form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid #dbe3f0;
+    background: #ffffff;
+    font-size: 13px;
+    outline: none;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #142e5c;
+    box-shadow: 0 0 0 3px rgba(20, 46, 92, 0.12);
+  }
+
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+
+  .ai-box {
+    border-radius: 12px;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .ai-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    color: #15803d;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .ai-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .ai-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #14532d;
+    margin-bottom: 4px;
+  }
+
+  .ai-text {
+    font-size: 11px;
+    color: #166534;
+    line-height: 1.35;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 14px 22px 22px;
+  }
+
+  .save-btn {
+    border: none;
+    background: #142e5c;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 12px 22px rgba(20, 46, 92, 0.18);
+  }
+
+  .save-btn:hover {
+    background: #0f2448;
+  }
+
+  .save-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: auto;
+      height: auto;
+    }
+
+    .main {
+      padding: 18px;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-header">
+        <img src="logo.png" class="sidebar-logo" />
+        <div class="sidebar-text">
+          <div class="sidebar-title">VaxAlert</div>
+          <div class="sidebar-sub">Reganion Children's Clinic</div>
+        </div>
+      </div>
+
+      <div class="menu">
+        <a href="staffdb.html">Dashboard</a>
+        <a href="childrecords.html">Child Records</a>
+        <a href="recordvaccine.html" class="active">Record Vaccine</a>
+        <a href="reminderlogs.html">Reminder Logs</a>
+        <a href="reports.html">Reports</a>
+        <a href="staffprofile.html">Profile</a>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="profile-name" id="sidebarName"></div>
+      <div style="font-size: 12px; color: #64748b">staff</div>
+      <div class="signout" onclick="logout()">Sign Out</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header">
+      <h1>Record Vaccination</h1>
+      <p>Log a new administered vaccine</p>
+    </div>
+
+    <div class="card">
+      <div class="card-inner">
+        <form class="form" id="recordForm">
+          <div class="field">
+            <label for="child">Select Child</label>
+            <select id="child" required>
+              <option value="" selected disabled>Search or select child...</option>
+              <option>Sofia Reyes</option>
+              <option>Marco Reyes</option>
+              <option>Lucas Santos</option>
+            </select>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="vaccine">Vaccine Name</label>
+              <select id="vaccine" required>
+                <option value="" selected disabled>Select vaccine...</option>
+                <option>BCG</option>
+                <option>Hepatitis B</option>
+                <option>PCV</option>
+                <option>Pentavalent</option>
+                <option>Varicella</option>
+                <option>MMR</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="dose">Dose Number</label>
+              <select id="dose" required>
+                <option>Dose 1</option>
+                <option>Dose 2</option>
+                <option>Dose 3</option>
+                <option>Booster</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="date">Date Administered</label>
+              <input id="date" type="date" placeholder="mm/dd/yyyy" required />
+            </div>
+
+            <div class="field">
+              <label for="adminBy">Administered By</label>
+              <input id="adminBy" type="text" value="Dr. Reganion" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="notes">Notes (Optional)</label>
+            <textarea id="notes" placeholder="Any reactions or observations..."></textarea>
+          </div>
+
+          <div class="ai-box">
+            <div class="ai-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z"></path>
+                <path d="M9 12l2 2 4-4"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="ai-title">AI Schedule Update</div>
+              <div class="ai-text">
+                Saving this record will automatically recalculate the predicted dates for future doses based on the actual administration date.
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="footer">
+        <button class="save-btn" type="submit" form="recordForm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <path d="M17 21v-8H7v8"></path>
+            <path d="M7 3v5h8"></path>
+          </svg>
+          Save Record
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
+    document.getElementById("sidebarName").textContent = name;
+
+    function logout() {
+      localStorage.removeItem("staffName");
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("recordForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      alert("Record saved (UI only)");
+    });
+  </script>
+</body>
+</html>
