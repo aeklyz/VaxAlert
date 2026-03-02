@@ -38,17 +38,6 @@ body {
   margin-bottom: 25px;
 }
 
-.logo-area h1 {
-  font-size: 24px;
-  color: #142e5c;
-  margin-top: 10px;
-}
-
-.logo-area p {
-  font-size: 12px;
-  color: #64748b;
-}
-
 .logo-area img {
   display: block;
   margin: 0 auto;
@@ -118,7 +107,6 @@ input:focus {
   text-decoration: underline;
 }
 
-/* Remember me: custom checkbox + label */
 .remember-wrap {
   display: flex;
   align-items: center;
@@ -207,6 +195,155 @@ input.invalid {
   border-color: #b91c1c;
 }
 
+/* ─── Modal Overlay ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(10, 25, 50, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-card {
+  width: 400px;
+  max-width: 90vw;
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 36px 32px;
+  text-align: center;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.25), 0 8px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(24px) scale(0.96);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  opacity: 0;
+}
+
+.modal-overlay.active .modal-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+.modal-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-icon.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.modal-icon.warning::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), transparent 60%);
+}
+
+.modal-icon svg {
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  position: relative;
+  z-index: 1;
+}
+
+.icon-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(245, 158, 11, 0.7);
+  border-right-color: rgba(245, 158, 11, 0.35);
+  animation: ringPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { transform: rotate(0deg); opacity: 0.6; }
+  50%      { transform: rotate(180deg); opacity: 1; }
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.modal-body {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.modal-email {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #142e5c;
+  background: #f0f4fa;
+  padding: 6px 14px;
+  border-radius: 8px;
+  margin: 8px 0 20px;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.modal-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.modal-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: #142e5c;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.modal-btn:hover { background: #0f2448; }
+.modal-btn:active { transform: scale(0.99); }
+.modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.modal-btn.secondary {
+  background: transparent;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.modal-btn.secondary:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
 </style>
 </head>
 
@@ -240,7 +377,7 @@ input.invalid {
       <a href="#">Forgot password?</a>
     </div>
 
-    <button type="submit" class="btn">Login →</button>
+    <button type="submit" class="btn" id="loginBtn">Login →</button>
   </form>
 
   <div class="small-text">
@@ -250,28 +387,60 @@ input.invalid {
 
 </div>
 
+<!-- ─── Email Not Verified Modal ─── -->
+<div class="modal-overlay" id="verifyModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <div class="modal-icon warning">
+      <div class="icon-ring"></div>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+      </svg>
+    </div>
+
+    <h2 class="modal-title" id="modalTitle">Email Not Verified</h2>
+    <p class="modal-body">Your account exists but the email hasn't been verified yet. We've sent a new verification link to</p>
+    <div class="modal-email" id="modalEmail">your email</div>
+    <p class="modal-hint">Click the link in the email to activate your account, then come back and log in.<br>Don't see it? Check your spam folder.</p>
+
+    <button class="modal-btn" id="modalResendBtn">Resend Verification Email</button>
+    <button class="modal-btn secondary" id="modalCloseBtn">Back to Login</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getAuth, 
   signInWithEmailAndPassword,
-  sendEmailVerification
+  sendEmailVerification,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+const API_BASE_URL = "http://localhost:5502";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyA2fbyNqJk6PfKJB77xAOTIJNF95xLmGCA",
-  authDomain: "vaxalert-system.firebaseapp.com",
-  projectId: "vaxalert-system",
-  appId: "1:806493293722:web:6da6dcd920d704d2da2323"
+  apiKey: "AIzaSyB-C4P6bDNB09-tRJAh0C9q8SWKgBvfaDw",
+  authDomain: "vaxalert-d367a.firebaseapp.com",
+  projectId: "vaxalert-d367a",
+  appId: "1:943254464827:web:340e546141d238165d6f1e"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const form = document.getElementById("loginForm");
+const loginBtn = document.getElementById("loginBtn");
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const messageEl = document.getElementById("formMessage");
+
+// Modal elements
+const modalOverlay = document.getElementById("verifyModal");
+const modalEmailEl = document.getElementById("modalEmail");
+const modalResendBtn = document.getElementById("modalResendBtn");
+const modalCloseBtn = document.getElementById("modalCloseBtn");
+
+let unverifiedUser = null;
 
 function showMessage(text, isError) {
   messageEl.textContent = text;
@@ -284,6 +453,85 @@ function clearMessage() {
   messageEl.style.display = "none";
 }
 
+// ─── Modal Logic ───
+function openModal(email) {
+  modalEmailEl.textContent = email;
+  modalOverlay.classList.add("active");
+  modalCloseBtn.focus();
+}
+
+function closeModal() {
+  modalOverlay.classList.remove("active");
+}
+
+modalCloseBtn.addEventListener("click", closeModal);
+
+modalOverlay.addEventListener("click", (e) => {
+  if (e.target === modalOverlay) closeModal();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && modalOverlay.classList.contains("active")) closeModal();
+});
+
+// Resend with cooldown
+modalResendBtn.addEventListener("click", async () => {
+  if (!unverifiedUser) return;
+  modalResendBtn.disabled = true;
+  modalResendBtn.textContent = "Sending…";
+
+  try {
+    await sendEmailVerification(unverifiedUser);
+    modalResendBtn.textContent = "Email Sent ✓";
+
+    let seconds = 30;
+    const timer = setInterval(() => {
+      seconds--;
+      modalResendBtn.textContent = `Resend in ${seconds}s`;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        modalResendBtn.textContent = "Resend Verification Email";
+        modalResendBtn.disabled = false;
+      }
+    }, 1000);
+  } catch (err) {
+    modalResendBtn.textContent = "Failed – Try Again";
+    modalResendBtn.disabled = false;
+  }
+});
+
+// ─── Helper: Check Firestore verification as fallback ───
+async function checkFirestoreVerification(idToken) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/parent/profile`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    if (response.ok) {
+      return true; // Token is valid, profile exists — Firestore has the user
+    }
+  } catch (e) {
+    console.error("Firestore check failed:", e);
+  }
+  return false;
+}
+
+// ─── Also sync Firestore emailVerified via a dedicated endpoint ───
+async function syncVerificationStatus(idToken) {
+  try {
+    await fetch(`${API_BASE_URL}/api/auth/sync-verification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`
+      }
+    });
+  } catch (e) {
+    // Non-critical, just log it
+    console.warn("Could not sync verification status:", e);
+  }
+}
+
+// ─── Form Submit ───
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   clearMessage();
@@ -291,27 +539,127 @@ form.addEventListener("submit", async (e) => {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
 
+  // Disable button to prevent double-submit
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Logging in…";
+
   try {
+    // Step 1: Sign in with Firebase Client SDK
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-
+    
+    // Step 2: Force reload to get latest emailVerified status from Firebase Auth
     await userCredential.user.reload();
+    
+    // Re-fetch the user after reload (reload updates the local user object)
+    const currentUser = auth.currentUser;
 
-    if (!userCredential.user.emailVerified) {
-      await sendEmailVerification(userCredential.user);
-      showMessage("Please verify your email first. A new verification email has been sent.", true);
+    // Step 3: Check if email is verified in Firebase Auth
+    if (!currentUser.emailVerified) {
+      // Not verified in Firebase Auth — show modal, sign out
+      unverifiedUser = currentUser;
+      
+      try {
+        await sendEmailVerification(currentUser);
+      } catch (verifyErr) {
+        // May fail if email was sent recently — that's fine
+        console.warn("Could not send verification email:", verifyErr.code);
+      }
+
+      await signOut(auth);
+
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login →";
+      openModal(email);
       return;
     }
 
-    showMessage("Login successful! Redirecting…", false);
+    // Step 4: Email IS verified — get a fresh ID token
+    const idToken = await currentUser.getIdToken(true); // force refresh
 
+    // Step 5: Sync the verification status to Firestore
+    // (In case the server's custom verify-email updated Firebase Auth 
+    //  but Firestore is out of sync, or vice versa)
+    await syncVerificationStatus(idToken);
+
+    // Step 6: Verify the token works with the backend and get user role
+    let userRole = "parent"; // default
+    
+    // Try to get user profile to determine role
+    const profileCheck = await fetch(`${API_BASE_URL}/api/parent/profile`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+
+    if (profileCheck.status === 401) {
+      showMessage("Session error. Please try logging in again.", true);
+      await signOut(auth);
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login →";
+      return;
+    }
+
+    if (profileCheck.status === 200) {
+      const profileData = await profileCheck.json();
+      userRole = profileData.role || "parent";
+    } else if (profileCheck.status === 404) {
+      showMessage("Account profile not found. Please contact support.", true);
+      await signOut(auth);
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login →";
+      return;
+    }
+
+    // Step 7: Store credentials
+    localStorage.setItem("idToken", idToken);
+    localStorage.setItem("userId", currentUser.uid);
+    localStorage.setItem("userEmail", currentUser.email);
+    localStorage.setItem("userRole", userRole);
+
+    showMessage("Login successful! Redirecting…", false);
+    
+    // Redirect based on role
+    let redirectPage = "parentdb.html";
+    if (userRole === "admin") redirectPage = "admindb.html";
+    else if (userRole === "staff") redirectPage = "staffdb.html";
+    
     setTimeout(() => {
-      window.location.href = "schedule.html";
-    }, 800);
+      window.location.href = redirectPage;
+    }, 600);
 
   } catch (error) {
-    showMessage(error.message, true);
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Login →";
+
+    const code = error.code;
+    if (code === "auth/user-not-found" || code === "auth/wrong-password" || code === "auth/invalid-credential") {
+      showMessage("Invalid email or password. Please try again.", true);
+    } else if (code === "auth/too-many-requests") {
+      showMessage("Too many failed attempts. Please try again later.", true);
+    } else if (code === "auth/network-request-failed") {
+      showMessage("Network error. Please check your connection.", true);
+    } else {
+      console.error("Login error:", error);
+      showMessage("Login failed. Please try again.", true);
+    }
   }
 });
+
+// ─── Handle URL params (from email verify redirect) ───
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("verified") === "1") {
+  showMessage("Email verified successfully! You can now log in.", false);
+  // Clean URL
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+if (urlParams.get("error")) {
+  const errorMap = {
+    "missing-token": "Verification link is invalid.",
+    "invalid-token": "Verification link is invalid or has already been used.",
+    "token-expired": "Verification link has expired. Please request a new one.",
+    "verification-failed": "Verification failed. Please try again.",
+  };
+  showMessage(errorMap[urlParams.get("error")] || "An error occurred.", true);
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
 </script>
 
 </body>

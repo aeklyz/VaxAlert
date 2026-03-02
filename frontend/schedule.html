@@ -5,13 +5,112 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vaccination Schedule</title>
 
-<link rel="stylesheet" href="sidebar.css">
-
 <style>
-body { display: flex; background: #f1f5f9; font-family:"Segoe UI",sans-serif; }
-.main { flex: 1; padding: 40px; }
+body {
+  margin: 0;
+  background: #f1f5f9;
+  font-family: "Segoe UI", sans-serif;
+}
 
-.header { display:flex; justify-content:space-between; margin-bottom:25px; }
+/* SIDEBAR */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 15px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.sidebar-logo {
+  width: 40px;
+  margin-right: 10px;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.sidebar-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.menu a {
+  display: block;
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1e293b;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.menu a:hover {
+  background: #f1f5f9;
+}
+
+.menu a.active {
+  background: #142e5c;
+  color: white;
+}
+
+/* PROFILE (fixed bottom section) */
+.profile {
+  padding: 20px 15px;   /* same horizontal padding as sidebar-content */
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto;
+}
+
+.profile-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.profile-role {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.signout {
+  font-size: 13px;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+/* MAIN CONTENT */
+.main {
+  margin-left: 260px;
+  padding: 40px;
+}
+
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:25px;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
 .header h1 { font-size:24px; color:#1e293b; }
 .header p { font-size:14px; color:#64748b; margin-top:5px; }
 
@@ -22,32 +121,48 @@ body { display: flex; background: #f1f5f9; font-family:"Segoe UI",sans-serif; }
   box-shadow:0 8px 20px rgba(0,0,0,0.05);
 }
 
-.search input {
-  width:300px;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #cbd5e1;
+.controls {
+  display:flex;
+  gap:12px;
   margin-bottom:15px;
+  flex-wrap:wrap;
 }
 
+.controls select,
+.controls input {
+  padding:10px 14px;
+  border-radius:8px;
+  border:1px solid #cbd5e1;
+  font-size:14px;
+  font-family:inherit;
+}
+
+.controls select { min-width:200px; }
+.controls input { width:260px; }
+
 table { width:100%; border-collapse:collapse; font-size:14px; }
-th { background:#f8fafc; padding:12px; text-align:left; }
+th { background:#f8fafc; padding:12px; text-align:left; color:#475569; font-weight:600; }
 td { padding:12px; border-top:1px solid #e2e8f0; }
 
-.badge { padding:5px 10px; border-radius:20px; font-size:12px; }
+.badge { padding:5px 10px; border-radius:20px; font-size:12px; font-weight:600; display:inline-block; }
 .completed { background:#d1fae5; color:#047857; }
 .overdue { background:#fee2e2; color:#b91c1c; }
-.due { background:#fef3c7; color:#b45309; }
+.due-soon { background:#fef3c7; color:#b45309; }
+.upcoming { background:#dbeafe; color:#1e40af; }
+
+.empty-msg { text-align:center; padding:30px; color:#64748b; }
+#loadingIndicator { text-align:center; padding:20px; color:#64748b; }
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-  <div>
+
+  <div class="sidebar-content">
     <div class="sidebar-header">
       <img src="logo.png" class="sidebar-logo">
-      <div class="sidebar-text">
+      <div>
         <div class="sidebar-title">VaxAlert</div>
         <div class="sidebar-sub">Reganion Children's Clinic</div>
       </div>
@@ -63,65 +178,173 @@ td { padding:12px; border-top:1px solid #e2e8f0; }
   </div>
 
   <div class="profile">
-    <div class="profile-name" id="sidebarName"></div>
-    <div style="font-size:12px;color:#64748b;">parent</div>
+    <div class="profile-name" id="sidebarName">Loading...</div>
+    <div class="profile-role">Parent</div>
     <div class="signout" onclick="logout()">Sign Out</div>
   </div>
+
 </div>
 
 <div class="main">
   <div class="header">
     <div>
       <h1>Vaccination Schedule</h1>
-      <p>Predicted dates for upcoming vaccinations</p>
+      <p>Upcoming and overdue vaccinations for your children</p>
     </div>
   </div>
 
   <div class="card">
-    <div class="search">
-      <input type="text" placeholder="Search vaccine...">
+    <div class="controls">
+      <select id="childSelect">
+        <option value="">All Children</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="Search vaccine...">
     </div>
 
-    <table>
+    <div id="loadingIndicator"><p>Loading schedule...</p></div>
+
+    <table id="scheduleTable" style="display:none;">
       <thead>
         <tr>
+          <th>Child</th>
           <th>Vaccine</th>
           <th>Dose</th>
-          <th>Predicted Date</th>
+          <th>Due Date</th>
           <th>Status</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>MMR</td>
-          <td>Dose 1</td>
-          <td>2023-05-15</td>
-          <td><span class="badge completed">Completed</span></td>
-        </tr>
-        <tr>
-          <td>Varicella</td>
-          <td>Dose 1</td>
-          <td>2023-08-15</td>
-          <td><span class="badge overdue">Overdue</span></td>
-        </tr>
-        <tr>
-          <td>Hepatitis A</td>
-          <td>Dose 2</td>
-          <td>2023-11-15</td>
-          <td><span class="badge due">Due Soon</span></td>
-        </tr>
-      </tbody>
+      <tbody id="scheduleBody"></tbody>
     </table>
+
+    <div id="emptyMsg" class="empty-msg" style="display:none;">No scheduled vaccinations found.</div>
   </div>
 </div>
 
 <script>
-const name = localStorage.getItem("parentName") || "Maria";
-document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+let allScheduleRows = [];
 
-function logout(){
-  localStorage.removeItem("parentName");
-  window.location.href="login.html";
+function getAuthToken() { return localStorage.getItem("idToken"); }
+
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = new Date(typeof timestamp === "number" ? timestamp : timestamp.seconds * 1000);
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function getStatusBadge(status) {
+  const map = {
+    "overdue": '<span class="badge overdue">Overdue</span>',
+    "due-soon": '<span class="badge due-soon">Due Soon</span>',
+    "upcoming": '<span class="badge upcoming">Upcoming</span>',
+    "completed": '<span class="badge completed">Completed</span>',
+  };
+  return map[status] || `<span class="badge upcoming">${status}</span>`;
+}
+
+function renderTable() {
+  const childFilter = document.getElementById("childSelect").value;
+  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+
+  const filtered = allScheduleRows.filter(row => {
+    if (childFilter && row.childId !== childFilter) return false;
+    if (searchTerm && !row.vaccineName.toLowerCase().includes(searchTerm) && !row.dose.toLowerCase().includes(searchTerm)) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById("scheduleBody");
+  tbody.innerHTML = "";
+
+  if (filtered.length === 0) {
+    document.getElementById("scheduleTable").style.display = "none";
+    document.getElementById("emptyMsg").style.display = "block";
+    return;
+  }
+
+  document.getElementById("scheduleTable").style.display = "table";
+  document.getElementById("emptyMsg").style.display = "none";
+
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.childName}</td>
+      <td>${row.vaccineName}</td>
+      <td>${row.dose}</td>
+      <td>${formatDate(row.dueDate)}</td>
+      <td>${getStatusBadge(row.status)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function initializePage() {
+  const loading = document.getElementById("loadingIndicator");
+
+  // Load parent name
+  const profile = await apiCall("/api/parent/profile");
+  if (profile) {
+    document.getElementById("sidebarName").textContent = `${profile.firstName} ${profile.lastName}`;
+  }
+
+  // Load children
+  const children = await apiCall("/api/parent/children");
+  if (!children || children.length === 0) {
+    loading.innerHTML = '<p>No children found. <a href="preferences.html">Add a child</a> to see their schedule.</p>';
+    return;
+  }
+
+  // Populate child selector
+  const select = document.getElementById("childSelect");
+  children.forEach(child => {
+    const opt = document.createElement("option");
+    opt.value = child.id;
+    opt.textContent = `${child.firstName} ${child.lastName}`;
+    select.appendChild(opt);
+  });
+
+  // Load all schedules
+  for (const child of children) {
+    const schedule = await apiCall(`/api/child/${child.id}/schedule`);
+    if (schedule) {
+      schedule.forEach(v => {
+        allScheduleRows.push({
+          childId: child.id,
+          childName: `${child.firstName} ${child.lastName}`,
+          vaccineName: v.vaccineName,
+          dose: v.dose,
+          dueDate: v.dueDate,
+          status: v.status,
+        });
+      });
+    }
+  }
+
+  loading.style.display = "none";
+  renderTable();
+
+  // Attach filters
+  document.getElementById("childSelect").addEventListener("change", renderTable);
+  document.getElementById("searchInput").addEventListener("input", renderTable);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
 }
 </script>
 

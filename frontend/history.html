@@ -5,33 +5,181 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vaccination History</title>
 
-<link rel="stylesheet" href="sidebar.css">
-
 <style>
-body { display:flex; background:#f1f5f9; font-family:"Segoe UI",sans-serif; }
-.main { flex:1; padding:40px; }
-
-h1 { font-size:24px; color:#1e293b; }
-.sub { color:#64748b; margin-bottom:25px; font-size:14px; }
-
-.card {
-  background:white;
-  border-radius:14px;
-  padding:20px;
-  box-shadow:0 8px 20px rgba(0,0,0,0.05);
+body {
+  margin: 0;
+  background: #f1f5f9;
+  font-family: "Segoe UI", sans-serif;
 }
 
-table { width:100%; border-collapse:collapse; font-size:14px; }
-th { background:#f8fafc; padding:12px; text-align:left; color:#475569; }
-td { padding:12px; border-top:1px solid #e2e8f0; }
+/* SIDEBAR */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
 
-.filter-btn {
-  padding:8px 12px;
-  border-radius:8px;
-  border:1px solid #cbd5e1;
-  background:#f8fafc;
-  margin-bottom:15px;
-  cursor:pointer;
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 15px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.sidebar-logo {
+  width: 40px;
+  margin-right: 10px;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.sidebar-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.menu a {
+  display: block;
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1e293b;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.menu a:hover {
+  background: #f1f5f9;
+}
+
+.menu a.active {
+  background: #142e5c;
+  color: white;
+}
+
+/* PROFILE (locked bottom section) */
+.profile {
+  padding: 20px 15px;   /* same horizontal padding as sidebar-content */
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto;
+}
+
+.profile-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.profile-role {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.signout {
+  font-size: 13px;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+/* MAIN CONTENT */
+.main {
+  margin-left: 260px;
+  padding: 40px;
+}
+
+h1 {
+  font-size: 24px;
+  color: #1e293b;
+}
+
+.sub {
+  color: #64748b;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.controls select,
+.controls input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.controls select { min-width: 200px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  background: #f8fafc;
+  padding: 12px;
+  text-align: left;
+  color: #475569;
+  font-weight: 600;
+}
+
+td {
+  padding: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.completed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.empty-msg {
+  text-align: center;
+  padding: 30px;
+  color: #64748b;
+}
+
+#loadingIndicator {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
 }
 </style>
 </head>
@@ -39,10 +187,11 @@ td { padding:12px; border-top:1px solid #e2e8f0; }
 <body>
 
 <div class="sidebar">
-  <div>
+
+  <div class="sidebar-content">
     <div class="sidebar-header">
       <img src="logo.png" class="sidebar-logo">
-      <div class="sidebar-text">
+      <div>
         <div class="sidebar-title">VaxAlert</div>
         <div class="sidebar-sub">Reganion Children's Clinic</div>
       </div>
@@ -58,10 +207,11 @@ td { padding:12px; border-top:1px solid #e2e8f0; }
   </div>
 
   <div class="profile">
-    <div class="profile-name" id="sidebarName"></div>
-    <div style="font-size:12px;color:#64748b;">parent</div>
+    <div class="profile-name" id="sidebarName">Loading...</div>
+    <div class="profile-role">Parent</div>
     <div class="signout" onclick="logout()">Sign Out</div>
   </div>
+
 </div>
 
 <div class="main">
@@ -69,42 +219,140 @@ td { padding:12px; border-top:1px solid #e2e8f0; }
   <div class="sub">Past records of administered vaccines</div>
 
   <div class="card">
-    <button class="filter-btn">Filter by Date</button>
+    <div class="controls">
+      <select id="childSelect">
+        <option value="">All Children</option>
+      </select>
+    </div>
 
-    <table>
+    <div id="loadingIndicator"><p>Loading history...</p></div>
+
+    <table id="historyTable" style="display:none;">
       <thead>
         <tr>
+          <th>Child</th>
           <th>Vaccine</th>
           <th>Dose</th>
           <th>Date Administered</th>
           <th>Administered By</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>BCG</td>
-          <td>Dose 1</td>
-          <td>2022-05-16</td>
-          <td>Dr. Reganion</td>
-        </tr>
-        <tr>
-          <td>Hepatitis B</td>
-          <td>Dose 1</td>
-          <td>2022-05-16</td>
-          <td>Dr. Reganion</td>
-        </tr>
-      </tbody>
+      <tbody id="historyBody"></tbody>
     </table>
+
+    <div id="emptyMsg" class="empty-msg" style="display:none;">
+      No vaccination history found. Records will appear here once vaccines are administered.
+    </div>
   </div>
 </div>
 
 <script>
-const name = localStorage.getItem("parentName") || "Maria";
-document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+let allHistoryRows = [];
 
-function logout(){
-  localStorage.removeItem("parentName");
-  window.location.href="login.html";
+function getAuthToken() { return localStorage.getItem("idToken"); }
+
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = new Date(typeof timestamp === "number" ? timestamp : timestamp.seconds * 1000);
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function renderTable() {
+  const childFilter = document.getElementById("childSelect").value;
+
+  const filtered = allHistoryRows.filter(row => {
+    if (childFilter && row.childId !== childFilter) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById("historyBody");
+  tbody.innerHTML = "";
+
+  if (filtered.length === 0) {
+    document.getElementById("historyTable").style.display = "none";
+    document.getElementById("emptyMsg").style.display = "block";
+    return;
+  }
+
+  document.getElementById("historyTable").style.display = "table";
+  document.getElementById("emptyMsg").style.display = "none";
+
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.childName}</td>
+      <td>${row.vaccineName}</td>
+      <td>${row.dose}</td>
+      <td>${formatDate(row.administeredDate)}</td>
+      <td>${row.administeredBy || "N/A"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function initializePage() {
+  const loading = document.getElementById("loadingIndicator");
+
+  const profile = await apiCall("/api/parent/profile");
+  if (profile) {
+    document.getElementById("sidebarName").textContent = `${profile.firstName} ${profile.lastName}`;
+  }
+
+  const children = await apiCall("/api/parent/children");
+  if (!children || children.length === 0) {
+    loading.innerHTML = '<p>No children found. <a href="preferences.html">Add a child</a> first.</p>';
+    return;
+  }
+
+  const select = document.getElementById("childSelect");
+  children.forEach(child => {
+    const opt = document.createElement("option");
+    opt.value = child.id;
+    opt.textContent = `${child.firstName} ${child.lastName}`;
+    select.appendChild(opt);
+  });
+
+  for (const child of children) {
+    const history = await apiCall(`/api/child/${child.id}/history`);
+    if (history) {
+      history.forEach(v => {
+        allHistoryRows.push({
+          childId: child.id,
+          childName: `${child.firstName} ${child.lastName}`,
+          vaccineName: v.vaccineName,
+          dose: v.dose,
+          administeredDate: v.administeredDate,
+          administeredBy: v.administeredBy,
+        });
+      });
+    }
+  }
+
+  loading.style.display = "none";
+  renderTable();
+
+  document.getElementById("childSelect").addEventListener("change", renderTable);
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
 }
 </script>
 

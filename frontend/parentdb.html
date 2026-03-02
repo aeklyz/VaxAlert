@@ -5,17 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Parent Dashboard</title>
 
-<link rel="stylesheet" href="sidebar.css">
-
 <style>
 body {
-  display: flex;
+  margin: 0;
   background: #f1f5f9;
   font-family: "Segoe UI", sans-serif;
 }
 
-.main {
+/* SIDEBAR */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-content {
   flex: 1;
+  overflow-y: auto;
+  padding: 20px 15px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.sidebar-logo {
+  width: 40px;
+  margin-right: 10px;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.sidebar-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.menu a {
+  display: block;
+  padding: 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #1e293b;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.menu a:hover {
+  background: #f1f5f9;
+}
+
+.menu a.active {
+  background: #142e5c;
+  color: white;
+}
+
+.profile {
+  padding: 20px 15px;   /* same horizontal padding as sidebar-content */
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto;
+}
+
+.profile-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+#sidebarRole {
+  display: block;
+  margin-bottom: 12px;   /* space before Sign Out */
+}
+
+.signout {
+  font-size: 13px;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+/* MAIN CONTENT */
+.main {
+  margin-left: 260px; /* same width as sidebar */
   padding: 40px;
 }
 
@@ -38,40 +120,91 @@ body {
   display: flex;
   gap: 20px;
   margin-bottom: 25px;
+  flex-wrap: wrap;
 }
 
 .card {
   flex: 1;
+  min-width: 220px;
   background: white;
   padding: 20px;
   border-radius: 14px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.05);
 }
 
+.card h3 { color: #1e293b; margin-bottom: 4px; }
+
 .status-container {
   display: flex;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .status-box {
   flex: 1;
+  min-width: 280px;
   background: white;
   border-radius: 14px;
   padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
 }
 
-.due { border-left: 4px solid orange; }
-.overdue { border-left: 4px solid red; }
+.due { border-left: 4px solid #f59e0b; }
+.overdue { border-left: 4px solid #ef4444; }
 
 .small { font-size: 12px; color: #64748b; }
 .item { margin-bottom: 10px; font-size: 14px; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+
+.empty-state h3 { color: #334155; margin-bottom: 8px; }
+
+.add-child-btn {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 10px 20px;
+  background: #142e5c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.add-child-btn:hover { background: #0f2448; }
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-overdue { background: #fee2e2; color: #b91c1c; }
+.badge-due { background: #fef3c7; color: #b45309; }
+.badge-upcoming { background: #dbeafe; color: #1e40af; }
+
+#loadingIndicator {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
-  <div>
+
+  <div class="sidebar-content">
     <div class="sidebar-header">
       <img src="logo.png" class="sidebar-logo">
       <div class="sidebar-text">
@@ -90,10 +223,11 @@ body {
   </div>
 
   <div class="profile">
-    <div class="profile-name" id="sidebarName"></div>
-    <div style="font-size:12px;color:#64748b;">parent</div>
+    <div class="profile-name" id="sidebarName">Loading...</div>
+    <div style="font-size:12px;color:#64748b;" id="sidebarRole">Parent</div>
     <div class="signout" onclick="logout()">Sign Out</div>
   </div>
+
 </div>
 
 <div class="main">
@@ -102,45 +236,200 @@ body {
     <p>Here's the vaccination summary for your children.</p>
   </div>
 
-  <div class="cards">
-    <div class="card">
-      <h3>Sofia Reyes</h3>
-      <div class="small">3 years old</div><br>
-      <div class="small">Next Due</div>
-      <strong>Varicella</strong>
-    </div>
+  <div id="childrenCardsContainer" class="cards"></div>
+  <div class="status-container" id="statusContainer"></div>
 
-    <div class="card">
-      <h3>Marco Reyes</h3>
-      <div class="small">2 years old</div><br>
-      <div class="small">Next Due</div>
-      <strong>Pentavalent</strong>
-    </div>
-  </div>
-
-  <div class="status-container">
-    <div class="status-box due">
-      <h4>Due Soon</h4>
-      <div class="item">Hepatitis A (Dose 2)</div>
-      <div class="item">PCV (Dose 2)</div>
-    </div>
-
-    <div class="status-box overdue">
-      <h4>Overdue</h4>
-      <div class="item">Varicella (Dose 1)</div>
-      <div class="item">Pentavalent (Dose 2)</div>
-    </div>
+  <div id="loadingIndicator">
+    <p>Loading your vaccination data...</p>
   </div>
 </div>
 
 <script>
-const name = localStorage.getItem("parentName") || "Maria";
-document.getElementById("welcomeName").textContent = name;
-document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+
+function getAuthToken() {
+  return localStorage.getItem("idToken");
+}
+
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) {
+    window.location.href = "login.html";
+    return null;
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+    ...options.headers,
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+
+    if (response.status === 401) {
+      localStorage.clear();
+      window.location.href = "login.html";
+      return null;
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`API Error (${response.status}):`, errorData);
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("API call failed:", error);
+    return null;
+  }
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = new Date(typeof timestamp === "number" ? timestamp : timestamp.seconds * 1000);
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function getStatusBadge(status) {
+  const labels = { "overdue": "Overdue", "due-soon": "Due Soon", "upcoming": "Upcoming" };
+  const classes = { "overdue": "badge-overdue", "due-soon": "badge-due", "upcoming": "badge-upcoming" };
+  return `<span class="badge ${classes[status] || 'badge-upcoming'}">${labels[status] || status}</span>`;
+}
+
+async function loadParentProfile() {
+  const profile = await apiCall("/api/parent/profile");
+  if (profile) {
+    const parentName = `${profile.firstName} ${profile.lastName}`;
+    document.getElementById("welcomeName").textContent = profile.firstName;
+    document.getElementById("sidebarName").textContent = parentName;
+    localStorage.setItem("parentName", parentName);
+  }
+}
+
+function renderChildrenCards(children, vaccinationData) {
+  const container = document.getElementById("childrenCardsContainer");
+  container.innerHTML = "";
+
+  if (children.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="width:100%;">
+        <h3>No Children Added Yet</h3>
+        <p>Add your child's information to start tracking vaccinations.</p>
+        <a href="preferences.html" class="add-child-btn">+ Add a Child</a>
+      </div>`;
+    return;
+  }
+
+  children.forEach((child) => {
+    const childData = vaccinationData[child.id] || { schedule: [], history: [] };
+    const nextVaccine = childData.schedule.find(v => v.status !== "completed");
+    const completedCount = childData.history.length;
+    const pendingCount = childData.schedule.length;
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h3>${child.firstName} ${child.lastName}</h3>
+      <div class="small">${child.age !== null ? child.age + ' years old' : 'Age unknown'}</div>
+      <div style="margin-top:12px; display:flex; gap:16px;">
+        <div><div class="small">Completed</div><strong style="color:#047857;">${completedCount}</strong></div>
+        <div><div class="small">Pending</div><strong style="color:#b45309;">${pendingCount}</strong></div>
+      </div>
+      ${nextVaccine ? `
+        <div style="margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
+          <div class="small">Next Due</div>
+          <strong>${nextVaccine.vaccineName || "N/A"}</strong> — ${nextVaccine.dose || ""}
+          <div style="margin-top:4px;">${getStatusBadge(nextVaccine.status)} <span class="small">${formatDate(nextVaccine.dueDate)}</span></div>
+        </div>
+      ` : `<div style="margin-top:12px;" class="small">All vaccinations up to date!</div>`}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderStatusBoxes(children, vaccinationData) {
+  const container = document.getElementById("statusContainer");
+  container.innerHTML = "";
+
+  let dueSoon = [];
+  let overdue = [];
+
+  children.forEach((child) => {
+    const childData = vaccinationData[child.id] || { schedule: [] };
+    childData.schedule.forEach((v) => {
+      const entry = { name: `${v.vaccineName} — ${v.dose} (${child.firstName})`, dueDate: formatDate(v.dueDate) };
+      if (v.status === "due-soon") dueSoon.push(entry);
+      else if (v.status === "overdue") overdue.push(entry);
+    });
+  });
+
+  // Due Soon box
+  const dueSoonBox = document.createElement("div");
+  dueSoonBox.className = "status-box due";
+  dueSoonBox.innerHTML = `<h4 style="margin-bottom:12px;">⏰ Due Soon</h4>`;
+  if (dueSoon.length === 0) {
+    dueSoonBox.innerHTML += `<div class="item" style="color:#64748b;">No vaccinations due soon</div>`;
+  } else {
+    dueSoon.forEach((v) => {
+      dueSoonBox.innerHTML += `<div class="item"><strong>${v.name}</strong><br><span class="small">Due: ${v.dueDate}</span></div>`;
+    });
+  }
+  container.appendChild(dueSoonBox);
+
+  // Overdue box
+  const overdueBox = document.createElement("div");
+  overdueBox.className = "status-box overdue";
+  overdueBox.innerHTML = `<h4 style="margin-bottom:12px;">⚠️ Overdue</h4>`;
+  if (overdue.length === 0) {
+    overdueBox.innerHTML += `<div class="item" style="color:#64748b;">No overdue vaccinations</div>`;
+  } else {
+    overdue.forEach((v) => {
+      overdueBox.innerHTML += `<div class="item"><strong>${v.name}</strong><br><span class="small">Was due: ${v.dueDate}</span></div>`;
+    });
+  }
+  container.appendChild(overdueBox);
+}
+
+async function initializePage() {
+  const loadingIndicator = document.getElementById("loadingIndicator");
+
+  try {
+    await loadParentProfile();
+    const children = await apiCall("/api/parent/children");
+
+    if (!children || children.length === 0) {
+      loadingIndicator.style.display = "none";
+      renderChildrenCards([], {});
+      return;
+    }
+
+    const vaccinationData = {};
+    for (const child of children) {
+      const schedule = await apiCall(`/api/child/${child.id}/schedule`);
+      const history = await apiCall(`/api/child/${child.id}/history`);
+      vaccinationData[child.id] = { schedule: schedule || [], history: history || [] };
+    }
+
+    renderChildrenCards(children, vaccinationData);
+    renderStatusBoxes(children, vaccinationData);
+    loadingIndicator.style.display = "none";
+  } catch (error) {
+    console.error("Failed to load data:", error);
+    loadingIndicator.innerHTML = '<p style="color: #b91c1c;">Failed to load data. Please try again.</p>';
+  }
+}
 
 function logout() {
-  localStorage.removeItem("parentName");
+  localStorage.clear();
   window.location.href = "login.html";
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
 }
 </script>
 

@@ -266,86 +266,102 @@
   </div>
 
   <script>
-    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
-    document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+let allChildren = [];
 
-    function logout() {
-      localStorage.removeItem("staffName");
-      window.location.href = "login.html";
-    }
+function getAuthToken() { return localStorage.getItem("idToken"); }
 
-    const children = [
-      {
-        child: "Sofia Reyes",
-        dob: "2022-05-15",
-        parent: "Maria Reyes",
-        overdue: 1,
-        upcoming: 0,
-      },
-      {
-        child: "Marco Reyes",
-        dob: "2023-11-10",
-        parent: "Maria Reyes",
-        overdue: 2,
-        upcoming: 1,
-      },
-      {
-        child: "Lucas Santos",
-        dob: "2023-01-20",
-        parent: "Juan Santos",
-        overdue: 0,
-        upcoming: 1,
-      },
-    ];
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401 || response.status === 403) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
 
-    function summaryBadges(row) {
-      const badges = [];
-      if (row.overdue > 0) badges.push(`<span class="badge overdue">${row.overdue} Overdue</span>`);
-      if (row.upcoming > 0) badges.push(`<span class="badge upcoming">${row.upcoming} Upcoming</span>`);
-      return badges.join(" ");
-    }
+async function verifyStaffAccess() {
+  const profile = await apiCall("/api/staff/profile");
+  if (!profile) {
+    alert("Only staff accounts can access this page.");
+    localStorage.clear();
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
 
-    function render() {
-      const q = (document.getElementById("searchInput").value || "").toLowerCase();
-      const filtered = children.filter((r) => (r.child + " " + r.parent).toLowerCase().includes(q));
+function formatDate(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = new Date(typeof timestamp === "number" ? timestamp : timestamp.seconds * 1000);
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
 
-      document.getElementById("rows").innerHTML = filtered
-        .map(
-          (r) => `
-            <tr>
-              <td class="name">${r.child}</td>
-              <td>${r.dob}</td>
-              <td>${r.parent}</td>
-              <td><span class="status">${summaryBadges(r)}</span></td>
-              <td style="text-align: right">
-                <div class="actions">
-                  <button class="icon-btn" type="button" title="View">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                  <button class="icon-btn" type="button" title="Edit">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M12 20h9"></path>
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `
-        )
-        .join("");
-    }
+async function loadStaffProfile() {
+  const profile = await apiCall("/api/staff/profile");
+  if (profile) {
+    document.getElementById("sidebarName").textContent = `${profile.firstName} ${profile.lastName}`;
+    localStorage.setItem("staffName", `${profile.firstName} ${profile.lastName}`);
+  }
+}
 
-    document.getElementById("searchInput").addEventListener("input", render);
+async function loadChildren() {
+  const children = await apiCall("/api/staff/children");
+  if (!children) return;
+  allChildren = children;
+  render();
+}
 
-    document.getElementById("addChildBtn").addEventListener("click", () => {
-      alert("Add Child Profile clicked (UI only)");
-    });
+function summaryBadges(row) {
+  const badges = [];
+  if (row.overdue > 0) badges.push(`<span class="badge overdue">${row.overdue} Overdue</span>`);
+  if (row.upcoming > 0) badges.push(`<span class="badge upcoming">${row.upcoming} Upcoming</span>`);
+  return badges.join(" ");
+}
 
-    render();
+function render() {
+  const q = (document.getElementById("searchInput").value || "").toLowerCase();
+  const filtered = allChildren.filter(r => (r.firstName + " " + r.lastName + " " + r.parentName).toLowerCase().includes(q));
+
+  document.getElementById("rows").innerHTML = filtered.map(r => `
+    <tr>
+      <td class="name">${r.firstName} ${r.lastName}</td>
+      <td>${formatDate(r.dob)}</td>
+      <td>${r.parentName}</td>
+      <td><span class="status">${summaryBadges(r)}</span></td>
+      <td style="text-align: right">
+        <div class="actions">
+          <button class="icon-btn" type="button" title="View">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function initializePage() {
+  if (!await verifyStaffAccess()) return;
+  await loadStaffProfile();
+  await loadChildren();
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("addChildBtn").addEventListener("click", () => { alert("Add Child Profile (implement as needed)"); });
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}
   </script>
 </body>
 </html>

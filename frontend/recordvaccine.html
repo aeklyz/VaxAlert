@@ -310,18 +310,162 @@
   </div>
 
   <script>
-    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
-    document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+let children = [];
+let selectedChildId = null;
 
-    function logout() {
-      localStorage.removeItem("staffName");
-      window.location.href = "login.html";
-    }
+function getAuthToken() { return localStorage.getItem("idToken"); }
 
-    document.getElementById("recordForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      alert("Record saved (UI only)");
-    });
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401 || response.status === 403) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) { const err = await response.json().catch(() => ({})); console.error("API error:", err); return null; }
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
+
+async function verifyStaffAccess() {
+  const profile = await apiCall("/api/staff/profile");
+  if (!profile) {
+    alert("Only staff accounts can access this page.");
+    localStorage.clear();
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
+
+async function loadStaffProfile() {
+  const profile = await apiCall("/api/staff/profile");
+  if (profile) {
+    const fullName = `${profile.firstName} ${profile.lastName}`;
+    document.getElementById("sidebarName").textContent = fullName;
+    localStorage.setItem("staffName", fullName);
+    document.getElementById("adminBy").value = fullName || "";
+  }
+}
+
+async function loadChildren() {
+  const allChildren = await apiCall("/api/staff/children");
+  if (!allChildren) return;
+  
+  children = allChildren;
+  const selector = document.getElementById("child");
+  children.forEach(child => {
+    const option = document.createElement("option");
+    option.value = child.id;
+    option.textContent = `${child.firstName} ${child.lastName}`;
+    selector.appendChild(option);
+  });
+}
+
+async function loadVaccinesForChild() {
+  selectedChildId = document.getElementById("child").value;
+  if (!selectedChildId) return;
+  
+  const child = children.find(c => c.id === selectedChildId);
+  if (!child) return;
+  
+  // Load scheduled vaccines for this child
+  const schedule = await apiCall(`/api/child/${selectedChildId}/schedule`);
+  if (!schedule) return;
+  
+  // Populate vaccine and dose dropdowns
+  const vaccineSelect = document.getElementById("vaccine");
+  const doseSelect = document.getElementById("dose");
+  
+  // Clear existing options (keep the placeholder)
+  while (vaccineSelect.options.length > 1) vaccineSelect.remove(1);
+  while (doseSelect.options.length > 0) doseSelect.remove(0);
+  
+  // Group by vaccine name and get unique vaccines with their doses
+  const vaccineMap = {};
+  schedule.forEach(vac => {
+    if (!vaccineMap[vac.vaccineName]) vaccineMap[vac.vaccineName] = [];
+    vaccineMap[vac.vaccineName].push(vac.dose);
+  });
+  
+  Object.keys(vaccineMap).forEach(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    vaccineSelect.appendChild(option);
+  });
+  
+  schedule.forEach((vac, idx) => {
+    const option = document.createElement("option");
+    option.value = vac.dose || `Dose ${idx}`;
+    option.textContent = vac.dose || `Dose ${idx}`;
+    doseSelect.appendChild(option);
+  });
+}
+
+document.getElementById("child").addEventListener("change", loadVaccinesForChild);
+
+document.getElementById("recordForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  if (!selectedChildId) {
+    alert("Please select a child");
+    return;
+  }
+  
+  const vaccine = document.getElementById("vaccine").value;
+  const dose = document.getElementById("dose").value;
+  const dateAdministered = document.getElementById("date").value;
+  const administeredBy = document.getElementById("adminBy").value;
+  const notes = document.getElementById("notes").value;
+  
+  if (!vaccine || !dose || !dateAdministered) {
+    alert("Please fill all required fields");
+    return;
+  }
+  
+  // Find the vaccination record in the schedule
+  const schedule = await apiCall(`/api/child/${selectedChildId}/schedule`);
+  const vaccRecord = schedule.find(v => v.vaccineName === vaccine && v.dose === dose);
+  
+  if (!vaccRecord) {
+    alert("Could not find vaccine record");
+    return;
+  }
+  
+  // Call API to administer vaccine
+  const result = await apiCall(`/api/child/${selectedChildId}/vaccination/${vaccRecord.id}/administer`, {
+    method: "PUT",
+    body: JSON.stringify({
+      dateAdministered,
+      administeredBy,
+      notes,
+    }),
+  });
+  
+  if (result) {
+    alert("Vaccination record saved successfully!");
+    document.getElementById("recordForm").reset();
+    loadChildren();
+  } else {
+    alert("Failed to save vaccination record");
+  }
+});
+
+async function initializePage() {
+  if (!await verifyStaffAccess()) return;
+  await loadStaffProfile();
+  await loadChildren();
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}
   </script>
 </body>
 </html>

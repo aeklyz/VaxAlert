@@ -46,22 +46,11 @@ body {
   margin-bottom: 28px;
 }
 
-.form-row {
-  display: flex;
-  gap: 12px;
-}
+.form-row { display: flex; gap: 12px; }
 
-.form-group {
-  margin-bottom: 18px;
-  flex: 1;
-}
+.form-group { margin-bottom: 18px; flex: 1; }
 
-label {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 6px;
-  color: #334155;
-}
+label { display: block; font-size: 13px; margin-bottom: 6px; color: #334155; }
 
 input {
   width: 100%;
@@ -92,13 +81,9 @@ input:focus {
   margin-top: 4px;
 }
 
-.btn:hover {
-  background: #0f2448;
-}
-
-.btn:active {
-  transform: scale(0.99);
-}
+.btn:hover { background: #0f2448; }
+.btn:active { transform: scale(0.99); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .back-btn {
   position: absolute;
@@ -121,22 +106,9 @@ input:focus {
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-.back-btn:hover {
-  background: rgba(255,255,255,0.2);
-  color: #fff;
-  transform: translateX(-2px);
-}
+.back-btn:hover { background: rgba(255,255,255,0.2); color: #fff; transform: translateX(-2px); }
 
-.back-btn:active {
-  transform: translateX(-1px);
-}
-
-.field-hint {
-  display: block;
-  font-size: 11px;
-  color: #64748b;
-  margin-top: 4px;
-}
+.field-hint { display: block; font-size: 11px; color: #64748b; margin-top: 4px; }
 
 .form-error {
   font-size: 13px;
@@ -147,11 +119,77 @@ input:focus {
   border-radius: 10px;
   border: 1px solid #fecaca;
   min-height: 20px;
+  display: none;
 }
 
-input.invalid {
-  border-color: #b91c1c;
+input.invalid { border-color: #b91c1c; }
+
+/* ─── Modal ─── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10, 25, 50, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex; justify-content: center; align-items: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-card {
+  width: 400px; max-width: 90vw; background: #fff; border-radius: 20px;
+  padding: 40px 36px 32px; text-align: center;
+  box-shadow: 0 32px 64px rgba(0,0,0,0.25);
+  transform: translateY(24px) scale(0.96); opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+.modal-overlay.active .modal-card { transform: translateY(0) scale(1); opacity: 1; }
+
+.modal-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, #142e5c 0%, #1e4080 100%);
+  margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.modal-icon::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 60%);
+}
+.modal-icon svg { width: 32px; height: 32px; color: #fff; position: relative; z-index: 1; }
+
+.icon-ring {
+  position: absolute; inset: -4px; border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: rgba(34, 197, 94, 0.7);
+  border-right-color: rgba(34, 197, 94, 0.35);
+  animation: ringPulse 1.6s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%, 100% { transform: rotate(0deg); opacity: 0.6; }
+  50%      { transform: rotate(180deg); opacity: 1; }
+}
+
+.modal-title { font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+.modal-body { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 8px; }
+.modal-email {
+  display: inline-block; font-size: 13px; font-weight: 600; color: #142e5c;
+  background: #f0f4fa; padding: 6px 14px; border-radius: 8px;
+  margin: 8px 0 20px; word-break: break-all;
+}
+.modal-hint { font-size: 12px; color: #94a3b8; margin-bottom: 24px; line-height: 1.5; }
+
+.modal-btn {
+  width: 100%; padding: 13px; border-radius: 10px; border: none;
+  background: #142e5c; color: white; font-weight: 600; font-size: 14px;
+  cursor: pointer; transition: background 0.2s;
+}
+.modal-btn:hover { background: #0f2448; }
+
+.modal-resend {
+  display: inline-block; margin-top: 14px; font-size: 13px; color: #64748b;
+  cursor: pointer; border: none; background: none; font-family: inherit;
+}
+.modal-resend:hover { color: #142e5c; text-decoration: underline; }
+.modal-resend:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none; }
 </style>
 </head>
 
@@ -164,7 +202,6 @@ input.invalid {
   <p class="card-subtitle">Join VaxAlert to manage vaccination schedules</p>
 
   <form id="registerForm">
-    <!-- If opening as file:// and server is on a different port, uncomment and set: <input type="hidden" id="apiBaseUrl" value="http://localhost:5501"> -->
     <div class="form-row">
       <div class="form-group">
         <label>First Name</label>
@@ -200,34 +237,65 @@ input.invalid {
 
     <div id="formError" class="form-error" role="alert" aria-live="polite"></div>
 
-    <button type="submit" class="btn">Create Account</button>
+    <button type="submit" class="btn" id="submitBtn">Create Account</button>
   </form>
 </div>
+
+<!-- ─── Verification Email Modal ─── -->
+<div class="modal-overlay" id="verifyModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <div class="modal-icon">
+      <div class="icon-ring"></div>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+      </svg>
+    </div>
+
+    <h2 class="modal-title" id="modalTitle">Check Your Inbox</h2>
+    <p class="modal-body">We've sent a verification link to</p>
+    <div class="modal-email" id="modalEmail">your email</div>
+    <p class="modal-hint">Click the link in the email to activate your account.<br>Don't see it? Check your spam folder.</p>
+
+    <button class="modal-btn" id="modalGoLogin">Go to Login</button>
+    <button class="modal-resend" id="modalResend">Resend verification email</button>
+  </div>
+</div>
+
 </body>
 </html>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getAuth, 
-  createUserWithEmailAndPassword, 
-  sendEmailVerification 
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// 🔹 Your Firebase config (get from Firebase console)
+const API_BASE_URL = "http://localhost:5502";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyA2fbyNqJk6PfKJB77xAOTIJNF95xLmGCA",
-  authDomain: "vaxalert-system.firebaseapp.com",
-  projectId: "vaxalert-system",
-  appId: "1:806493293722:web:6da6dcd920d704d2da2323"
+  apiKey: "AIzaSyB-C4P6bDNB09-tRJAh0C9q8SWKgBvfaDw",
+  authDomain: "vaxalert-d367a.firebaseapp.com",
+  projectId: "vaxalert-d367a",
+  appId: "1:943254464827:web:340e546141d238165d6f1e"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const registerForm = document.querySelector("#registerForm");
+const submitBtn = document.querySelector("#submitBtn");
 const formErrorEl = document.querySelector("#formError");
-const passwordInput = document.querySelector("#password");
-const confirmInput = document.querySelector("#confirmPassword");
+
+const modalOverlay = document.querySelector("#verifyModal");
+const modalEmailEl = document.querySelector("#modalEmail");
+const modalGoLogin = document.querySelector("#modalGoLogin");
+const modalResend = document.querySelector("#modalResend");
+
+let registeredEmail = null;
+let registeredPassword = null;
 
 function showError(msg) {
   formErrorEl.textContent = msg;
@@ -246,14 +314,67 @@ function isPasswordValid(password) {
   return true;
 }
 
+// ─── Modal Logic ───
+function openModal(email) {
+  modalEmailEl.textContent = email;
+  modalOverlay.classList.add("active");
+  modalGoLogin.focus();
+}
+
+function closeModal() { modalOverlay.classList.remove("active"); }
+
+modalGoLogin.addEventListener("click", () => { closeModal(); window.location.href = "login.html"; });
+modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modalOverlay.classList.contains("active")) closeModal(); });
+
+// Resend: sign in briefly to send Firebase's verification email
+modalResend.addEventListener("click", async () => {
+  if (!registeredEmail || !registeredPassword) return;
+  modalResend.disabled = true;
+  modalResend.textContent = "Sending…";
+  
+  try {
+    // Sign in to get user object, send verification, sign out
+    const cred = await signInWithEmailAndPassword(auth, registeredEmail, registeredPassword);
+    await sendEmailVerification(cred.user);
+    await signOut(auth);
+
+    modalResend.textContent = "Email sent ✓";
+    
+    let seconds = 30;
+    const timer = setInterval(() => {
+      seconds--;
+      modalResend.textContent = `Resend in ${seconds}s`;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        modalResend.textContent = "Resend verification email";
+        modalResend.disabled = false;
+      }
+    }, 1000);
+  } catch (err) {
+    console.error("Resend failed:", err);
+    modalResend.textContent = "Failed to resend. Try again.";
+    modalResend.disabled = false;
+  }
+});
+
+// ─── Form Submit ───
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   clearError();
 
   const formData = new FormData(registerForm);
+  const firstName = formData.get("firstName").trim();
+  const lastName = formData.get("lastName").trim();
   const email = formData.get("email").trim();
+  const contactNumber = formData.get("contactNumber").trim();
   const password = formData.get("password");
   const confirmPassword = formData.get("confirmPassword");
+
+  if (!firstName || !lastName || !email || !contactNumber || !password) {
+    showError("All fields are required.");
+    return;
+  }
 
   if (!isPasswordValid(password)) {
     showError("Password must be at least 8 characters and include one number and one symbol.");
@@ -265,18 +386,55 @@ registerForm.addEventListener("submit", async (e) => {
     return;
   }
 
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Creating Account…";
+
   try {
-    // 🔹 Create user
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // ─── Step 1: Call the SERVER API to register ───
+    // This creates the Firebase Auth user AND the Firestore documents
+    // (users collection, preferences collection, verification token)
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, firstName, lastName, contactNumber }),
+    });
 
-    // 🔹 Send verification email
-    await sendEmailVerification(userCredential.user);
+    const data = await response.json();
 
-    alert("Registration successful! A verification email has been sent. Please check your inbox.");
+    if (!response.ok) {
+      showError(data.error || "Registration failed.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Create Account";
+      return;
+    }
 
+    // ─── Step 2: Sign in briefly to send Firebase's own verification email ───
+    // This ensures login.html's Firebase Auth emailVerified check will work
+    // after the user clicks the link
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      await signOut(auth);
+    } catch (clientErr) {
+      // Non-critical: the server already sent its own verification email
+      console.warn("Firebase client verification email skipped:", clientErr.code);
+    }
+
+    // Save for resend functionality
+    registeredEmail = email;
+    registeredPassword = password;
+
+    // ─── Step 3: Show success modal ───
     registerForm.reset();
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Create Account";
+    openModal(email);
+
   } catch (error) {
-    showError(error.message);
+    console.error("Registration error:", error);
+    showError("Registration failed. Please check your connection and try again.");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Create Account";
   }
 });
 </script>

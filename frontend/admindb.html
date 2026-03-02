@@ -333,7 +333,7 @@
           </div>
           <div>
             <div class="stat-label">Due Soon</div>
-            <div class="stat-value">2</div>
+            <div class="stat-value" id="statDue">0</div>
           </div>
         </div>
       </div>
@@ -349,7 +349,7 @@
           </div>
           <div>
             <div class="stat-label">Overdue</div>
-            <div class="stat-value">3</div>
+            <div class="stat-value" id="statOverdue">0</div>
           </div>
         </div>
       </div>
@@ -364,7 +364,7 @@
           </div>
           <div>
             <div class="stat-label">Completed (Wk)</div>
-            <div class="stat-value">5</div>
+            <div class="stat-value" id="statCompleted">0</div>
           </div>
         </div>
       </div>
@@ -380,7 +380,7 @@
           </div>
           <div>
             <div class="stat-label">Total Children</div>
-            <div class="stat-value">3</div>
+            <div class="stat-value" id="statChildren">0</div>
           </div>
         </div>
       </div>
@@ -423,84 +423,132 @@
   </div>
 
   <script>
-    const name = localStorage.getItem("adminName") || "Dr. Reganion";
-    document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+let allVaccinations = [];
+let stats = { due: 0, overdue: 0, completed: 0, children: 0 };
 
-    function logout() {
-      localStorage.removeItem("adminName");
-      window.location.href = "login.html";
-    }
+function getAuthToken() { return localStorage.getItem("idToken"); }
 
-    const allRows = [
-      { child: "Sofia Reyes", vaccine: "Hepatitis A (Dose 2)", dueDate: "2023-11-15", status: "due" },
-      { child: "Marco Reyes", vaccine: "PCV (Dose 2)", dueDate: "2024-02-10", status: "due" },
-      { child: "Liam Santos", vaccine: "Varicella (Dose 1)", dueDate: "2023-08-15", status: "overdue" },
-      { child: "Ava Cruz", vaccine: "Pentavalent (Dose 2)", dueDate: "2023-09-22", status: "overdue" },
-      { child: "Ethan Dela Rosa", vaccine: "MMR (Dose 1)", dueDate: "2024-03-02", status: "upcoming" },
-    ];
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401 || response.status === 403) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
 
-    let activeTab = "due";
+async function verifyAdminAccess() {
+  const profile = await apiCall("/api/admin/profile");
+  if (!profile) {
+    alert("Only admin accounts can access this page.");
+    localStorage.clear();
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
 
-    function badge(status) {
-      if (status === "due") return '<span class="badge due">Due Soon</span>';
-      if (status === "overdue") return '<span class="badge overdue">Overdue</span>';
-      return '<span class="badge upcoming">Upcoming</span>';
-    }
+function formatDate(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = new Date(typeof timestamp === "number" ? timestamp : timestamp.seconds * 1000);
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
 
-    function render() {
-      const q = (document.getElementById("searchInput").value || "").toLowerCase();
-      const filtered = allRows.filter((r) => {
-        const matchesTab = r.status === activeTab;
-        const matchesQuery = (r.child + " " + r.vaccine).toLowerCase().includes(q);
-        return matchesTab && matchesQuery;
-      });
+async function loadAdminProfile() {
+  const profile = await apiCall("/api/admin/profile");
+  if (profile) {
+    const adminName = `${profile.firstName} ${profile.lastName}`;
+    document.getElementById("sidebarName").textContent = adminName;
+    localStorage.setItem("adminName", adminName);
+  }
+}
 
-      document.getElementById("rows").innerHTML = filtered
-        .map(
-          (r) => `
-            <tr>
-              <td class="name">${r.child}</td>
-              <td>${r.vaccine}</td>
-              <td>${r.dueDate}</td>
-              <td>${badge(r.status)}</td>
-              <td style="text-align: right">
-                <div class="actions" style="justify-content:flex-end;">
-                  <button class="icon-btn" title="View" type="button">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                  <button class="icon-btn" title="Edit" type="button">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M12 20h9"></path>
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `
-        )
-        .join("");
-    }
+async function loadStats() {
+  const s = await apiCall("/api/admin/stats");
+  if (!s) return;
+  stats = s;
+  document.getElementById("statDue").textContent = stats.due;
+  document.getElementById("statOverdue").textContent = stats.overdue;
+  document.getElementById("statCompleted").textContent = stats.completed;
+  document.getElementById("statChildren").textContent = stats.totalChildren;
+}
 
-    document.getElementById("searchInput").addEventListener("input", render);
+async function loadVaccinations() {
+  const allVaccs = await apiCall("/api/admin/vaccinations");
+  if (!allVaccs) return;
+  allVaccinations = allVaccs;
+}
 
-    document.querySelectorAll(".tab").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach((b) => {
-          b.classList.remove("active");
-          b.setAttribute("aria-selected", "false");
-        });
-        btn.classList.add("active");
-        btn.setAttribute("aria-selected", "true");
-        activeTab = btn.getAttribute("data-tab");
-        render();
-      });
+function badge(status) {
+  if (status === "due") return '<span class="badge due">Due Soon</span>';
+  if (status === "overdue") return '<span class="badge overdue">Overdue</span>';
+  return '<span class="badge upcoming">Upcoming</span>';
+}
+
+let activeTab = "due";
+
+function render() {
+  const q = (document.getElementById("searchInput").value || "").toLowerCase();
+  const filtered = allVaccinations.filter(r => {
+    const matchesTab = r.status === activeTab;
+    const matchesQuery = (r.childName + " " + r.vaccineName).toLowerCase().includes(q);
+    return matchesTab && matchesQuery;
+  });
+
+  document.getElementById("rows").innerHTML = filtered.map(r => `
+    <tr>
+      <td class="name">${r.childName}</td>
+      <td>${r.vaccineName} (${r.dose})</td>
+      <td>${formatDate(r.dueDate)}</td>
+      <td>${badge(r.status)}</td>
+      <td style="text-align: right">
+        <div class="actions" style="justify-content:flex-end;">
+          <button class="icon-btn" title="View" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function initializePage() {
+  if (!await verifyAdminAccess()) return;
+  await loadAdminProfile();
+  await loadStats();
+  await loadVaccinations();
+  render();
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+document.getElementById("searchInput").addEventListener("input", render);
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => {
+      b.classList.remove("active");
+      b.setAttribute("aria-selected", "false");
     });
-
+    btn.classList.add("active");
+    btn.setAttribute("aria-selected", "true");
+    activeTab = btn.getAttribute("data-tab");
     render();
+  });
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}
   </script>
 </body>
 </html>

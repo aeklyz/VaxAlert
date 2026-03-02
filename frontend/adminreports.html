@@ -273,16 +273,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="name">Sofia Reyes</td>
-                <td>Hepatitis A</td>
-                <td class="due-date">2023-11-15</td>
-              </tr>
-              <tr>
-                <td class="name">Marco Reyes</td>
-                <td>PCV</td>
-                <td class="due-date">2024-02-10</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -300,21 +290,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="name">Sofia Reyes</td>
-                <td>Varicella</td>
-                <td><span class="pill">Overdue</span></td>
-              </tr>
-              <tr>
-                <td class="name">Marco Reyes</td>
-                <td>Pentavalent</td>
-                <td><span class="pill">Overdue</span></td>
-              </tr>
-              <tr>
-                <td class="name">Marco Reyes</td>
-                <td>OPV</td>
-                <td><span class="pill">Overdue</span></td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -323,16 +298,114 @@
   </div>
 
   <script>
-    const name = localStorage.getItem("adminName") || "Dr. Reganion";
-    document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+let vaccinations = { due: [], overdue: [] };
 
-    function logout() {
-      localStorage.removeItem("adminName");
-      window.location.href = "login.html";
-    }
+function getAuthToken() { return localStorage.getItem("idToken"); }
 
-    document.getElementById("printBtn").addEventListener("click", () => window.print());
-    document.getElementById("exportBtn").addEventListener("click", () => alert("Export CSV (UI only)"));
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401 || response.status === 403) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
+
+async function verifyAdminAccess() {
+  const profile = await apiCall("/api/admin/profile");
+  if (!profile) {
+    alert("Only admin accounts can access this page.");
+    localStorage.clear();
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = new Date(typeof timestamp === "number" ? timestamp : timestamp.seconds * 1000);
+  return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+async function loadAdminProfile() {
+  const profile = await apiCall("/api/admin/profile");
+  if (profile) {
+    document.getElementById("sidebarName").textContent = `${profile.firstName} ${profile.lastName}`;
+    localStorage.setItem("adminName", `${profile.firstName} ${profile.lastName}`);
+  }
+}
+
+async function loadReports() {
+  const allVaccs = await apiCall("/api/admin/vaccinations");
+  if (!allVaccs) return;
+  
+  vaccinations.due = allVaccs.filter(v => v.status === "due");
+  vaccinations.overdue = allVaccs.filter(v => v.status === "overdue");
+  
+  renderDueReport();
+  renderOverdueReport();
+}
+
+function renderDueReport() {
+  const tbody = document.querySelector(".card:nth-child(1) tbody");
+  tbody.innerHTML = vaccinations.due.slice(0, 10).map(v => `
+    <tr>
+      <td class="name">${v.childName}</td>
+      <td>${v.vaccineName}</td>
+      <td class="due-date">${formatDate(v.dueDate)}</td>
+    </tr>
+  `).join("") || "<tr><td colspan='3' style='text-align:center; padding: 10px;'>No due vaccines</td></tr>";
+}
+
+function renderOverdueReport() {
+  const tbody = document.querySelector(".card:nth-child(2) tbody");
+  tbody.innerHTML = vaccinations.overdue.slice(0, 10).map(v => `
+    <tr>
+      <td class="name">${v.childName}</td>
+      <td>${v.vaccineName}</td>
+      <td><span class="pill">Overdue</span></td>
+    </tr>
+  `).join("") || "<tr><td colspan='3' style='text-align:center; padding: 10px;'>No overdue vaccines</td></tr>";
+}
+
+async function initializePage() {
+  if (!await verifyAdminAccess()) return;
+  await loadAdminProfile();
+  await loadReports();
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+document.getElementById("exportBtn").addEventListener("click", () => {
+  let csv = "Due Soon Report\nChild,Vaccine,Due Date\n";
+  vaccinations.due.forEach(v => {
+    csv += `"${v.childName}","${v.vaccineName}","${formatDate(v.dueDate)}"\n`;
+  });
+  csv += "\nOverdue Report\nChild,Vaccine,Status\n";
+  vaccinations.overdue.forEach(v => {
+    csv += `"${v.childName}","${v.vaccineName}","Overdue"\n`;
+  });
+  
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `admin-report-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}
   </script>
 </body>
 </html>

@@ -338,31 +338,95 @@
   </div>
 
   <script>
-    const name = localStorage.getItem("staffName") || "Sarah Mendoza";
-    document.getElementById("sidebarName").textContent = name;
-    document.getElementById("profileName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
 
-    const initials = name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0].toUpperCase())
-      .join("");
-    document.getElementById("avatar").textContent = initials || "S";
+function getAuthToken() { return localStorage.getItem("idToken"); }
 
-    function logout() {
-      localStorage.removeItem("staffName");
-      window.location.href = "login.html";
-    }
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401 || response.status === 403) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) { const err = await response.json().catch(() => ({})); console.error("API error:", err); return null; }
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
 
-    document.getElementById("securityForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      alert("Saved changes (UI only)");
-    });
+async function verifyStaffAccess() {
+  const profile = await apiCall("/api/staff/profile");
+  if (!profile) {
+    alert("Only staff accounts can access this page.");
+    localStorage.clear();
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
 
-    document.getElementById("cancelBtn").addEventListener("click", () => {
-      document.getElementById("securityForm").reset();
-    });
+async function loadStaffProfile() {
+  const profile = await apiCall("/api/staff/profile");
+  if (!profile) return;
+  
+  const fullName = `${profile.firstName} ${profile.lastName}`;
+  document.getElementById("sidebarName").textContent = fullName;
+  document.getElementById("profileName").textContent = fullName;
+  document.getElementById("emailText").textContent = profile.email;
+  document.getElementById("phoneText").textContent = profile.contactNumber;
+  
+  const initials = fullName.split(" ").filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join("");
+  document.getElementById("avatar").textContent = initials || "S";
+  
+  localStorage.setItem("staffName", fullName);
+}
+
+async function initializePage() {
+  if (!await verifyStaffAccess()) return;
+  await loadStaffProfile();
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+document.getElementById("securityForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const currentPw = document.getElementById("currentPw").value;
+  const newPw = document.getElementById("newPw").value;
+  const confirmPw = document.getElementById("confirmPw").value;
+  
+  if (!currentPw || !newPw || !confirmPw) {
+    alert("Please fill all fields");
+    return;
+  }
+  
+  if (newPw !== confirmPw) {
+    alert("Passwords do not match");
+    return;
+  }
+  
+  const result = await apiCall("/api/auth/change-password", {
+    method: "PUT",
+    body: JSON.stringify({ newPassword: newPw }),
+  });
+  
+  if (result) {
+    alert("Password changed successfully!");
+    document.getElementById("securityForm").reset();
+  } else {
+    alert("Failed to change password");
+  }
+});
+
+document.getElementById("cancelBtn").addEventListener("click", () => {
+  document.getElementById("securityForm").reset();
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}
   </script>
 </body>
 </html>

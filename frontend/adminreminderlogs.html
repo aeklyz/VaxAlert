@@ -265,75 +265,120 @@
   </div>
 
   <script>
-    const name = localStorage.getItem("adminName") || "Dr. Reganion";
-    document.getElementById("sidebarName").textContent = name;
+const API_BASE_URL = "http://localhost:5502";
+let allLogs = [];
+let activeStatus = "all";
 
-    function logout() {
-      localStorage.removeItem("adminName");
-      window.location.href = "login.html";
-    }
+function getAuthToken() { return localStorage.getItem("idToken"); }
 
-    const logs = [
-      { dt: "2024-02-01 09:00 AM", child: "Marco Reyes", contact: "maria.reyes@example.com", channel: "email", status: "sent" },
-      { dt: "2024-02-01 09:05 AM", child: "Marco Reyes", contact: "+63 917 123 4567", channel: "sms", status: "failed" },
-      { dt: "2024-02-05 10:00 AM", child: "Sofia Reyes", contact: "maria.reyes@example.com", channel: "email", status: "pending" },
-      { dt: "2024-01-15 08:30 AM", child: "Lucas Santos", contact: "juan.santos@example.com", channel: "email", status: "sent" },
-    ];
+async function apiCall(endpoint, options = {}) {
+  const token = getAuthToken();
+  if (!token) { window.location.href = "login.html"; return null; }
+  const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}`, ...options.headers };
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+    if (response.status === 401 || response.status === 403) { localStorage.clear(); window.location.href = "login.html"; return null; }
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) { console.error("API call failed:", error); return null; }
+}
 
-    let activeStatus = "all";
+async function verifyAdminAccess() {
+  const profile = await apiCall("/api/admin/profile");
+  if (!profile) {
+    alert("Only admin accounts can access this page.");
+    localStorage.clear();
+    window.location.href = "login.html";
+    return false;
+  }
+  return true;
+}
 
-    function channelPill(ch) {
-      return ch === "sms" ? '<span class="pill sms">SMS</span>' : '<span class="pill email">Email</span>';
-    }
+function formatDate(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = new Date(typeof timestamp === "number" ? timestamp : timestamp.seconds * 1000);
+  return date.toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
-    function statusPill(st) {
-      if (st === "sent") return '<span class="pill sent">Sent</span>';
-      if (st === "failed") return '<span class="pill failed">Failed</span>';
-      return '<span class="pill pending">Pending</span>';
-    }
+async function loadAdminProfile() {
+  const profile = await apiCall("/api/admin/profile");
+  if (profile) {
+    document.getElementById("sidebarName").textContent = `${profile.firstName} ${profile.lastName}`;
+    localStorage.setItem("adminName", `${profile.firstName} ${profile.lastName}`);
+  }
+}
 
-    function render() {
-      const q = (document.getElementById("searchInput").value || "").toLowerCase();
-      const filtered = logs.filter((r) => {
-        const matchesText = (r.dt + " " + r.child + " " + r.contact + " " + r.channel + " " + r.status).toLowerCase().includes(q);
-        const matchesStatus = activeStatus === "all" ? true : r.status === activeStatus;
-        return matchesText && matchesStatus;
-      });
-
-      document.getElementById("rows").innerHTML = filtered
-        .map(
-          (r) => `
-            <tr>
-              <td>${r.dt}</td>
-              <td class="child">${r.child}</td>
-              <td>${r.contact}</td>
-              <td>${channelPill(r.channel)}</td>
-              <td>${statusPill(r.status)}</td>
-              <td style="text-align:right;">
-                <div class="actions">
-                  <button class="icon-btn" type="button" title="View">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          `
-        )
-        .join("");
-    }
-
-    document.getElementById("searchInput").addEventListener("input", render);
-
-    document.getElementById("filterBtn").addEventListener("click", () => {
-      const next = activeStatus === "all" ? "sent" : activeStatus === "sent" ? "failed" : activeStatus === "failed" ? "pending" : "all";
-      activeStatus = next;
-      render();
-    });
-
+async function loadReminderLogs() {
+  const logs = await apiCall("/api/admin/reminder-logs");
+  if (!logs) {
+    allLogs = [];
     render();
+    return;
+  }
+  allLogs = logs;
+  render();
+}
+
+function channelPill(ch) {
+  return ch === "sms" ? '<span class="pill sms">SMS</span>' : '<span class="pill email">Email</span>';
+}
+
+function statusPill(st) {
+  if (st === "sent") return '<span class="pill sent">Sent</span>';
+  if (st === "failed") return '<span class="pill failed">Failed</span>';
+  return '<span class="pill pending">Pending</span>';
+}
+
+function render() {
+  const q = (document.getElementById("searchInput").value || "").toLowerCase();
+  const filtered = allLogs.filter(r => {
+    const matchesText = (r.sentAt + " " + r.childName + " " + r.method + " " + r.status).toLowerCase().includes(q);
+    const matchesStatus = activeStatus === "all" ? true : r.status === activeStatus;
+    return matchesText && matchesStatus;
+  });
+
+  document.getElementById("rows").innerHTML = filtered.map(r => `
+    <tr>
+      <td>${formatDate(r.sentAt)}</td>
+      <td class="child">${r.childName}</td>
+      <td>Vaccination reminder</td>
+      <td>${channelPill(r.method)}</td>
+      <td>${statusPill(r.status)}</td>
+      <td style="text-align:right;">
+        <div class="actions">
+          <button class="icon-btn" type="button" title="View">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function initializePage() {
+  if (!await verifyAdminAccess()) return;
+  await loadAdminProfile();
+  await loadReminderLogs();
+}
+
+function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+document.getElementById("searchInput").addEventListener("input", render);
+
+document.getElementById("filterBtn").addEventListener("click", () => {
+  const next = activeStatus === "all" ? "sent" : activeStatus === "sent" ? "failed" : activeStatus === "failed" ? "pending" : "all";
+  activeStatus = next;
+  render();
+});
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}
   </script>
 </body>
 </html>
